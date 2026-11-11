@@ -16,6 +16,7 @@ from forty8.connectors.mocks.data import (
     MockSurveyStore,
 )
 from forty8.connectors.mocks.geocoders import MockBingGeocoder, MockMoodysGeocoder, MockWebSearch
+from forty8.connectors.mocks import llm_coding, llm_headers, llm_slip  # noqa: F401  (register mock LLM tasks)
 from forty8.connectors.mocks.llm import MockLLM
 from forty8.connectors.mocks.model import MockCatModel, MockPricingTool
 

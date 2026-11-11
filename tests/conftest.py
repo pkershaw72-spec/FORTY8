@@ -4,6 +4,7 @@ import pytest
 
 from forty8.config import load_settings
 from forty8.orchestrator.engine import Orchestrator
+from forty8.orchestrator.pipeline import placeholder_agents
 from forty8.synth.generator import generate
 
 
@@ -16,8 +17,10 @@ def settings(tmp_path):
 
 @pytest.fixture
 def make_orchestrator(settings):
-    def _make(agents=None):
-        return Orchestrator(settings, agents=agents)
+    def _make(agents=None, real=False):
+        """real=False starts from placeholder agents (orchestrator tests); real=True uses the built agents."""
+        base = {} if real else placeholder_agents()
+        return Orchestrator(settings, agents=base | (agents or {}))
     return _make
 
 

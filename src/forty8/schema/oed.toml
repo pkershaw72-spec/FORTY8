@@ -1,0 +1,101 @@
+# Target schema: Open Exposure Data (OED) location fields used by Forty8.
+# `canonical` is the pipeline's internal field; `name` is the column name in this target format.
+# To add another format (e.g. Moody's RMS), add a sibling file with that format's names and
+# select it with [schema] target in config/forty8.toml.
+# Synonyms are matched after lower-casing, removing accents and dropping bracketed text.
+format = "oed"
+
+[[fields]]
+canonical = "LocNumber"
+name = "LocNumber"
+required = true
+synonyms = ["loc #", "loc no", "loc number", "location number", "location id", "location ref", "site id", "ref",
+            "no. ubic.", "no ubicacion", "numero de ubicacion", "ubicacion no"]
+
+[[fields]]
+canonical = "LocName"
+name = "LocName"
+synonyms = ["site name", "location name", "name", "premises name", "nombre del sitio", "nombre", "nombre de ubicacion"]
+
+[[fields]]
+canonical = "StreetAddress"
+name = "StreetAddress"
+required = true
+synonyms = ["street address", "address", "address line 1", "street", "direccion", "domicilio", "calle"]
+
+[[fields]]
+canonical = "City"
+name = "City"
+required = true
+synonyms = ["city", "town", "ciudad", "municipio", "localidad"]
+
+[[fields]]
+canonical = "AreaCode"
+name = "AreaCode"
+synonyms = ["state/province", "state", "province", "county", "region", "prefecture", "estado", "provincia"]
+
+[[fields]]
+canonical = "PostalCode"
+name = "PostalCode"
+synonyms = ["postal code", "postcode", "zip", "zip code", "codigo postal", "c.p.", "cp"]
+
+[[fields]]
+canonical = "CountryCode"
+name = "CountryCode"
+required = true
+synonyms = ["country", "country code", "pais"]
+
+[[fields]]
+canonical = "occupancy_text"
+name = "OccupancyCode"
+synonyms = ["occupancy", "occupancy description", "use", "building use", "giro / ocupacion", "giro", "ocupacion", "uso"]
+
+[[fields]]
+canonical = "construction_text"
+name = "ConstructionCode"
+synonyms = ["construction", "construction type", "construction class", "tipo de construccion", "construccion"]
+
+[[fields]]
+canonical = "YearBuilt"
+name = "YearBuilt"
+synonyms = ["year built", "yr built", "year of construction", "ano de construccion", "ano construccion"]
+
+[[fields]]
+canonical = "NumberOfStoreys"
+name = "NumberOfStoreys"
+synonyms = ["no. of stories", "no. of storeys", "stories", "storeys", "number of stories", "number of storeys",
+            "floors", "niveles", "pisos", "numero de pisos"]
+
+[[fields]]
+canonical = "FloorArea"
+name = "FloorArea"
+synonyms = ["floor area", "area", "gross floor area", "gfa", "superficie", "area construida"]
+
+[[fields]]
+canonical = "BuildingTIV"
+name = "BuildingTIV"
+required = true
+synonyms = ["building value", "buildings", "building", "building tiv", "building sum insured", "bldg value",
+            "valor edificio", "edificio", "valor del edificio"]
+
+[[fields]]
+canonical = "ContentsTIV"
+name = "ContentsTIV"
+synonyms = ["contents value", "contents", "contents tiv", "stock and contents", "valor contenidos", "contenidos"]
+
+[[fields]]
+canonical = "BITIV"
+name = "BITIV"
+synonyms = ["bi value", "bi", "business interruption", "bi sum insured", "perdidas consecuenciales",
+            "interrupcion de negocio"]
+
+[[fields]]
+canonical = "stated_tiv"
+name = "TotalTIV"
+synonyms = ["total insured value", "tiv", "total tiv", "total value", "total sum insured",
+            "suma asegurada total", "suma asegurada", "valor total"]
+
+[[fields]]
+canonical = "LocCurrency"
+name = "LocCurrency"
+synonyms = ["currency", "ccy", "moneda", "divisa"]

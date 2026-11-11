@@ -6,6 +6,7 @@
 geocode_min_tiv_street_level = 0.80   # step 6 and step 8: share of TIV at street level or better
 slip_min_confidence = 0.85            # step 2b: overall slip confidence = minimum term confidence
 ml_min_confidence = 0.75              # step 5: below this the value goes to the review queue
+header_min_confidence = 0.80          # step 3: minimum confidence to accept an LLM header mapping
 
 [geocoding]
 street_level_or_better = ["rooftop", "street"]

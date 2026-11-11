@@ -38,7 +38,13 @@ class ReviewService:
         mapping = None
         if item.learn is not None:
             broker = self._store.get_run(item.run_id)["broker"]
-            mapping = self._learning.propose(item.learn.kind, item.learn.key, value, analyst, broker, item.run_id)
+            learn_value = value
+            if item.learn.values is not None:
+                learn_value = item.learn.values.get(str(value))
+            if learn_value is not None:
+                mapping = self._learning.propose(
+                    item.learn.kind, item.learn.key, learn_value, analyst, broker, item.run_id
+                )
         return self._store.get_review_item(item_id), mapping
 
     def corrections_for(self, run_id: str, step: str) -> list[Correction]:

@@ -8,8 +8,8 @@ See [SPEC.md](SPEC.md). Internal proof of concept: **synthetic data and mock con
 | Phase | Scope | State |
 |---|---|---|
 | 1 | Skeleton: orchestrator, audit log, review queue, learning loop, connector interfaces + mocks, synthetic data | done |
-| 2 | Steps 1-5 and the slip lane | next |
-| 3 | Steps 6-7: geocoding cascade, enrichment | |
+| 2 | Steps 1-5 and the slip lane (85% gate, learning loop) | done |
+| 3 | Steps 6-7: geocoding cascade, enrichment | next |
 | 4 | Steps 8-11, end-to-end tests, metrics report | |
 | 5 | Web page | |
 

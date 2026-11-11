@@ -16,6 +16,7 @@ class Thresholds(BaseModel):
     geocode_min_tiv_street_level: float = Field(ge=0, le=1)
     slip_min_confidence: float = Field(ge=0, le=1)
     ml_min_confidence: float = Field(ge=0, le=1)
+    header_min_confidence: float = Field(ge=0, le=1)
 
 
 class GeocodingSettings(BaseModel):

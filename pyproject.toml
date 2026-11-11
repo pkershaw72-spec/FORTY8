@@ -14,6 +14,7 @@ dependencies = [
     "reportlab>=4.0",
     "pypdf>=4.0",
     "h3>=4.0",
+    "scikit-learn>=1.4",
 ]
 
 [project.optional-dependencies]
@@ -24,6 +25,9 @@ forty8 = "forty8.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+forty8 = ["schema/*.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

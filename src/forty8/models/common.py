@@ -55,6 +55,9 @@ class LearnSpec(BaseModel):
 
     kind: str  # e.g. "header", "occupancy", "construction", "slip_term", "address"
     key: str   # normalised lookup key, e.g. the source header text
+    # Optional: what to store for each possible correction when the analyst's answer (e.g. a row
+    # number) is not itself reusable. Keys are str(correction).
+    values: dict[str, Any] | None = None
 
 
 class ExceptionItem(BaseModel):

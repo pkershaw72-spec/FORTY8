@@ -42,6 +42,19 @@ def lane_steps(lane: str) -> list[StepDef]:
     return [s for s in STEPS if s.lane == lane]
 
 
+def placeholder_agents() -> dict[str, Agent]:
+    return {s.key: NoOpAgent(s.key) for s in STEPS}
+
+
 def default_agents() -> dict[str, Agent]:
     """Real agents where implemented; placeholders elsewhere. Later phases replace the placeholders."""
-    return {s.key: NoOpAgent(s.key) for s in STEPS}
+    from forty8.agents.cleaning import CleaningAgent
+    from forty8.agents.coding import CodingAgent
+    from forty8.agents.contract import ContractAgent
+    from forty8.agents.intake import IntakeAgent
+    from forty8.agents.ml_classify import MLClassifyAgent
+    from forty8.agents.schema_mapping import SchemaMappingAgent
+
+    real: list[Agent] = [IntakeAgent(), CleaningAgent(), ContractAgent(), SchemaMappingAgent(), CodingAgent(),
+                         MLClassifyAgent()]
+    return placeholder_agents() | {agent.key: agent for agent in real}

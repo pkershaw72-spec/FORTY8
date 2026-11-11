@@ -97,6 +97,7 @@ class Location(BaseModel):
     # Working fields (not exported to OED)
     occupancy_text: str | None = None
     construction_text: str | None = None
+    stated_tiv: float | None = None     # the row's own total column, if the SoV has one
     lineage: Lineage | None = None
     geocode: GeocodeResult | None = None
     h3_cell: str | None = None
