@@ -79,10 +79,10 @@ def load_settings(path: str | Path | None = None, overrides: dict[str, Any] | No
     """Load settings. `overrides` is a nested dict merged over the file (used by tests)."""
     with open(path or config_path(), "rb") as fh:
         raw = tomllib.load(fh)
-    if overrides:
-        _deep_merge(raw, overrides)
     if db := os.environ.get("FORTY8_DB"):
         raw["storage"]["db_path"] = db
+    if overrides:  # explicit overrides win over the environment
+        _deep_merge(raw, overrides)
     return Settings.model_validate(raw)
 
 

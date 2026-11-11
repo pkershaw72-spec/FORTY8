@@ -86,7 +86,8 @@ def cmd_review(args: argparse.Namespace) -> int:
         item, mapping = orc.review.correct(args.id, value, args.analyst)
         print(f"Review item {item.id} resolved by {args.analyst}.")
         if mapping:
-            print(f"Learned mapping {mapping.id} proposed ({mapping.kind}: {mapping.key!r}); "
+            key = mapping.key if len(mapping.key) <= 60 else mapping.key[:57] + "..."
+            print(f"Learned mapping {mapping.id} proposed ({mapping.kind}: {key!r}); "
                   f"a second analyst must approve it: forty8 learn approve {mapping.id} --analyst <name>")
         print(f"Resume when ready: forty8 review resume {item.run_id}")
     elif args.action == "resume":
@@ -100,7 +101,7 @@ def cmd_learn(args: argparse.Namespace) -> int:
     if args.action == "list":
         status = MappingStatus(args.status) if args.status else None
         print(_table(["id", "kind", "scope", "key", "value", "status", "proposed by", "approved by"],
-                     [[m.id, m.kind, m.scope, m.key, json.dumps(m.value), m.status.value, m.proposed_by,
+                     [[m.id, m.kind, m.scope, m.key[:60], json.dumps(m.value)[:60], m.status.value, m.proposed_by,
                        m.approved_by or ""] for m in orc.learning.list(status)]))
     elif args.action == "approve":
         mapping = orc.learning.approve(args.id, args.analyst, scope=args.scope)

@@ -114,13 +114,13 @@ class SchemaMappingAgent:
         """One review item per unmapped header in a tab that lacks a required column."""
         unmapped = [m for m in out.mappings if m.tab == tab and m.target_field is None
                     and not m.method.startswith(("analyst", "learned"))]
-        tiv = sum(v for r in clean.rows if r.lineage.tab == tab for v in r.values.values() if is_number(v))
+        affected = float(sum(1 for r in clean.rows if r.lineage.tab == tab))  # rows held up
         if not unmapped:
             return [ExceptionItem(
                 code="REQUIRED_COLUMN_ABSENT", subject=f"required:{tab}",
                 reason=f"Tab '{tab}' has no column for required field(s) {', '.join(missing)} and no unmapped "
                        "headers left to assign. The source file needs fixing.",
-                payload={"tab": tab, "missing": missing}, priority=tiv,
+                payload={"tab": tab, "missing": missing}, priority=affected,
             )]
         return [ExceptionItem(
             code="UNMAPPED_REQUIRED_COLUMN", subject=f"header:{m.source_header}",
@@ -128,7 +128,7 @@ class SchemaMappingAgent:
                    f"'{m.source_header}' is unmapped. Correct with the target field name, or 'ignore'.",
             payload={"tab": tab, "header": m.source_header, "missing_required": missing,
                      "samples": _samples(clean, m.source_header), "target_fields": load_schema(out.target_schema).canonical_names},
-            priority=tiv, learn=LearnSpec(kind="header", key=m.source_header),
+            priority=affected, learn=LearnSpec(kind="header", key=m.source_header),
         ) for m in unmapped]
 
 
