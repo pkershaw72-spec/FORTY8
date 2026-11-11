@@ -144,6 +144,16 @@ def cmd_export(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_serve(args: argparse.Namespace) -> int:
+    import uvicorn
+
+    from forty8.web.app import create_app
+
+    print(f"Forty8 web page: http://{args.host}:{args.port}")
+    uvicorn.run(create_app(load_settings(args.config)), host=args.host, port=args.port, log_level="warning")
+    return 0
+
+
 def cmd_metrics(args: argparse.Namespace) -> int:
     orc = _orchestrator(args)
     if not args.run:
@@ -232,6 +242,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("run")
     p.add_argument("--out", default="export")
     p.set_defaults(func=cmd_export)
+
+    p = sub.add_parser("serve", help="start the web page (run progress, review queue, audit log)")
+    p.add_argument("--host", default="127.0.0.1")
+    p.add_argument("--port", type=int, default=8048)
+    p.set_defaults(func=cmd_serve)
 
     p = sub.add_parser("metrics", help="show a run's metrics, or a summary across all runs")
     p.add_argument("run", nargs="?")

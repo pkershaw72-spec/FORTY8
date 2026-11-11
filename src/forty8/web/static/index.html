@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forty8</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #ffffff; --ink: #1b2330; --muted: #5d6878; --line: #dfe3ea; --accent: #1f4fa3;
+    --ok: #1a7f4b; --ok-bg: #e4f4ea; --warn: #96600a; --warn-bg: #fdf1d8; --bad: #b3261e; --bad-bg: #fbe4e2;
+    --run: #1f4fa3; --run-bg: #e3ecfb; --idle: #5d6878; --idle-bg: #eceff3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161d; --panel: #1a202a; --ink: #e6eaf0; --muted: #9aa5b5; --line: #2c3442; --accent: #8fb4ff;
+      --ok: #6fd39b; --ok-bg: #173526; --warn: #f0c060; --warn-bg: #3a2e12; --bad: #ff9a92; --bad-bg: #40201e;
+      --run: #8fb4ff; --run-bg: #1c2b47; --idle: #9aa5b5; --idle-bg: #242b37;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; padding: 14px 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0; font-size: 20px; letter-spacing: .02em; }
+  header .sub { color: var(--muted); font-size: 12px; }
+  header .grow { flex: 1; }
+  .layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 16px; padding: 16px 20px; align-items: start; }
+  @media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+  section, aside { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+  main { display: grid; gap: 16px; min-width: 0; grid-template-columns: minmax(0, 1fr); }
+  main > section { min-width: 0; }
+  #learn, #outcome, #review details { overflow-x: auto; }
+  .nowrap { white-space: nowrap; }
+  h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  button { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: var(--panel); cursor: pointer; }
+  button.secondary { background: transparent; color: var(--accent); }
+  button:disabled { opacity: .5; cursor: default; }
+  input, select { font: inherit; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); min-width: 0; }
+  label { color: var(--muted); font-size: 12px; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+  .PASSED, .COMPLETED, .approved { color: var(--ok); background: var(--ok-bg); }
+  .AWAITING_REVIEW, .OPEN, .proposed { color: var(--warn); background: var(--warn-bg); }
+  .FAILED, .revoked { color: var(--bad); background: var(--bad-bg); }
+  .RUNNING { color: var(--run); background: var(--run-bg); }
+  .PENDING, .RESOLVED { color: var(--idle); background: var(--idle-bg); }
+  .runs { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; max-height: 60vh; overflow: auto; }
+  .runs li { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; cursor: pointer; }
+  .runs li.selected { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+  .runs .id { font-family: ui-monospace, monospace; font-size: 12px; }
+  .runs .meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 8px; color: var(--muted); }
+  .facts b { color: var(--ink); font-weight: 600; }
+  .scroll-x { overflow-x: auto; }
+  .pipeline { display: grid; grid-template-columns: repeat(11, minmax(84px, 1fr)); gap: 6px; min-width: 990px; }
+  .step { border: 1px solid var(--line); border-radius: 6px; padding: 8px; border-top-width: 4px; background: var(--bg); }
+  .step.s-PASSED { border-top-color: var(--ok); } .step.s-AWAITING_REVIEW { border-top-color: var(--warn); }
+  .step.s-FAILED { border-top-color: var(--bad); } .step.s-RUNNING { border-top-color: var(--run); }
+  .step .num { font-size: 11px; color: var(--muted); } .step .name { font-weight: 600; margin: 1px 0 6px; min-height: 2.9em; }
+  .step .small { font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .slip { grid-column: 2 / span 7; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+  .slip .name { min-height: 0; margin: 0; }
+  .lane-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 10px 0 4px; }
+  .lane-note { grid-column: span 1; align-self: center; font-size: 11px; color: var(--muted); }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; position: sticky; top: 0; background: var(--panel); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .mono { font-family: ui-monospace, monospace; font-size: 12px; overflow-wrap: anywhere; }
+  .item { border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; }
+  .item .reason { margin: 6px 0 8px; }
+  .item input.value { flex: 1 1 260px; }
+  details { margin: 6px 0; } summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+  pre { margin: 6px 0 0; padding: 8px; background: var(--bg); border-radius: 6px; overflow: auto; max-height: 220px; font-size: 12px; }
+  .audit { max-height: 460px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+  .empty { color: var(--muted); }
+  .msg { margin-top: 8px; font-size: 12px; } .msg.err { color: var(--bad); } .msg.ok { color: var(--ok); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Forty8</h1>
+    <div class="sub">Catastrophe modelling pipeline &middot; proof of concept &middot; synthetic data, mock connectors</div>
+  </div>
+  <div class="grow"></div>
+  <div id="summary" class="sub"></div>
+  <div><label for="analyst">Analyst name</label><br><input id="analyst" placeholder="e.g. alice" autocomplete="off"></div>
+</header>
+
+<div class="layout">
+  <aside>
+    <h2>Runs</h2>
+    <div class="row">
+      <button id="demo-clean" class="secondary">Run clean demo</button>
+      <button id="demo-messy" class="secondary">Run messy demo</button>
+    </div>
+    <div id="demo-msg" class="msg"></div>
+    <ul id="runs" class="runs"></ul>
+  </aside>
+
+  <main>
+    <section id="s-run"><h2>Run</h2><div id="run" class="empty">Select a run, or start a demo run.</div></section>
+    <section id="s-pipeline" hidden><h2>Progress</h2><div id="pipeline"></div></section>
+    <section id="s-review" hidden><h2>Review queue</h2><div id="review"></div></section>
+    <section id="s-learn"><h2>Learned mappings</h2><div id="learn"></div></section>
+    <section id="s-outcome" hidden><h2>Outcome</h2><div id="outcome"></div></section>
+    <section id="s-audit" hidden>
+      <h2>Audit log</h2>
+      <div class="row" style="margin-bottom:8px">
+        <select id="audit-agent" aria-label="Filter by agent"><option value="">All agents</option></select>
+        <input id="audit-text" placeholder="Filter text" style="flex:1 1 200px" aria-label="Filter audit text">
+        <span id="audit-count" class="sub"></span>
+      </div>
+      <div class="audit"><table><thead><tr>
+        <th>#</th><th>Time (UTC)</th><th>Agent</th><th>Input</th><th>Decision</th><th class="num">Conf.</th><th>Rule / model</th>
+      </tr></thead><tbody id="audit"></tbody></table></div>
+    </section>
+  </main>
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const state = { runId: null, cache: {}, audit: [] };
+
+function h(tag, attrs, ...children) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of children.flat()) if (c != null && c !== false) el.append(c.nodeType ? c : String(c));
+  return el;
+}
+const badge = (status) => h("span", { class: "badge " + status }, String(status).replace(/_/g, " ").toLowerCase());
+
+async function api(path, body) {
+  const res = await fetch(path, body === undefined ? {} :
+    { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || res.statusText);
+  return data;
+}
+/* Re-render a section only when its data changed, so polling never wipes what an analyst is typing. */
+function changed(key, data) {
+  const text = JSON.stringify(data);
+  if (state.cache[key] === text) return false;
+  state.cache[key] = text;
+  return true;
+}
+function analyst() {
+  const name = $("analyst").value.trim();
+  if (!name) { $("analyst").focus(); throw new Error("Enter your analyst name (top right) first."); }
+  return name;
+}
+function parseValue(text) {
+  try { return JSON.parse(text); } catch (e) { return text; }
+}
+function say(el, text, ok) { el.textContent = text; el.className = "msg " + (ok ? "ok" : "err"); }
+
+/* ---- runs list */
+async function loadRuns() {
+  const data = await api("/api/runs");
+  if (!changed("runs" + state.runId, data)) return;
+  const s = data.summary;
+  $("summary").textContent = s.runs
+    ? `${s.runs} run(s) · ${s.completed} completed · straight-through rate ${s.straight_through_rate == null ? "n/a" : Math.round(s.straight_through_rate * 100) + "%"}`
+    : "No runs yet";
+  $("runs").replaceChildren(...data.runs.map((r) => h("li",
+    { class: r.run_id === state.runId ? "selected" : "", onclick: () => selectRun(r.run_id) },
+    h("div", { class: "row" }, h("span", { class: "id" }, r.run_id), badge(r.status)),
+    h("div", { class: "meta" }, `${r.created_at.slice(0, 19).replace("T", " ")} · ${r.broker}`),
+    h("div", { class: "meta" }, r.open_items ? `${r.open_items} open review item(s)` :
+      r.status === "COMPLETED" ? (r.straight_through ? "straight through" : `${r.analyst_touches} analyst touch(es)`) : ""))));
+  if (!state.runId && data.runs.length) selectRun(data.runs[0].run_id);
+}
+function selectRun(runId) {
+  state.runId = runId;
+  state.cache = {};
+  location.hash = runId;
+  refresh();
+}
+
+/* ---- selected run */
+async function loadRun() {
+  if (!state.runId) return;
+  const [detail, audit] = await Promise.all([api(`/api/runs/${state.runId}`), api(`/api/runs/${state.runId}/audit`)]);
+  for (const id of ["s-pipeline", "s-review", "s-outcome", "s-audit"]) $(id).hidden = false;
+  if (changed("run", [detail.run, detail.metrics])) renderRun(detail);
+  if (changed("review", detail.review)) renderReview(detail);
+  if (changed("outcome", detail.outcome)) renderOutcome(detail.outcome);
+  if (changed("audit", audit.events.length)) { state.audit = audit.events; renderAuditFilter(); renderAudit(); }
+}
+function renderRun({ run, metrics: m }) {
+  const wall = m.wall_clock_seconds == null ? "run not complete" : m.wall_clock_seconds.toFixed(1) + "s";
+  $("run").className = "";
+  $("run").replaceChildren(
+    h("div", { class: "row" }, h("span", { class: "mono" }, run.run_id), badge(run.status)),
+    h("div", { class: "facts" },
+      h("span", {}, "Broker ", h("b", {}, run.broker)),
+      h("span", {}, "Straight-through ", h("b", {}, m.straight_through ? "yes" : "no")),
+      h("span", {}, "Analyst touches ", h("b", {}, m.analyst_touches)),
+      h("span", {}, "Exceptions raised ", h("b", {}, m.exceptions_raised)),
+      h("span", {}, "Agent processing ", h("b", {}, m.elapsed_seconds.toFixed(2) + "s")),
+      h("span", {}, "Wall clock incl. analyst ", h("b", {}, wall))),
+    h("div", { class: "sub", style: "margin-top:6px;overflow-wrap:anywhere" }, `SoV: ${run.sov_path} · Slip: ${run.slip_path}`));
+
+  const card = (s, extra) => h("div", { class: `step s-${s.status} ${extra || ""}` },
+    h("div", { class: "num" }, "Step " + s.number), h("div", { class: "name" }, s.name), badge(s.status),
+    h("div", { class: "small" }, `${s.elapsed_seconds.toFixed(3)}s · ${s.attempts} attempt(s)` +
+      (s.exceptions_raised ? ` · ${s.analyst_touches}/${s.exceptions_raised} exceptions resolved` : "")));
+  const main = m.steps.filter((s) => s.lane === "main"), slip = m.steps.find((s) => s.lane === "slip");
+  $("pipeline").replaceChildren(h("div", { class: "scroll-x" },
+    h("div", { class: "lane-label" }, "Main lane"),
+    h("div", { class: "pipeline" }, main.map((s) => card(s))),
+    h("div", { class: "lane-label" }, "Slip lane - runs in parallel"),
+    h("div", { class: "pipeline" },
+      h("div", { class: "lane-note" }, "starts after step 1 →"),
+      card(slip, "slip"),
+      h("div", { class: "lane-note" }, "→ joins at step 9"))));
+}
+
+function renderReview({ run, review }) {
+  const open = review.filter((i) => i.status === "OPEN"), resolved = review.filter((i) => i.status === "RESOLVED");
+  const paused = run.status === "AWAITING_REVIEW";
+  const msg = h("div", { class: "msg" });
+  const nodes = [];
+  if (!review.length) nodes.push(h("div", { class: "empty" }, "No exceptions were raised for this run."));
+  for (const item of open) {
+    const input = h("input", { class: "value", placeholder: "Correction (text, number or JSON)", "aria-label": "Correction for item " + item.id });
+    const note = h("div", { class: "msg" });
+    const submit = async () => {
+      try {
+        const result = await api(`/api/review/${item.id}/correct`, { value: parseValue(input.value.trim()), analyst: analyst() });
+        say(note, result.proposed_mapping ? "Saved. A learned mapping was proposed for a second analyst to approve." : "Saved.", true);
+        await refresh();
+      } catch (e) { say(note, e.message, false); }
+    };
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+    nodes.push(h("div", { class: "item" },
+      h("div", { class: "row" }, h("b", {}, `#${item.id}`), h("span", { class: "mono" }, item.code), badge("OPEN"),
+        h("span", { class: "sub" }, `step: ${item.step}` + (item.priority ? ` · priority ${Math.round(item.priority).toLocaleString()}` : ""))),
+      h("div", { class: "reason" }, item.reason),
+      h("details", {}, h("summary", {}, "Details"), h("pre", {}, JSON.stringify(item.payload, null, 2))),
+      h("div", { class: "row" }, input, h("button", { onclick: submit }, "Submit correction")), note));
+  }
+  if (paused || open.length) {
+    nodes.push(h("div", { class: "row" },
+      h("button", { disabled: open.length > 0, onclick: async () => {
+        try { await api(`/api/runs/${run.run_id}/resume`, {}); await refresh(); } catch (e) { say(msg, e.message, false); }
+      } }, "Resume run"),
+      h("span", { class: "sub" }, open.length ? `${open.length} item(s) still open` : "All items answered - resume to re-run the paused step(s).")), msg);
+  }
+  if (resolved.length) {
+    nodes.push(h("details", {}, h("summary", {}, `${resolved.length} resolved item(s)`),
+      h("table", {}, h("thead", {}, h("tr", {}, ["#", "Step", "Exception", "Subject", "Correction", "Analyst"].map((t) => h("th", {}, t)))),
+        h("tbody", {}, resolved.map((i) => h("tr", {}, h("td", {}, i.id), h("td", {}, i.step), h("td", { class: "mono" }, i.code),
+          h("td", { class: "mono" }, i.subject), h("td", { class: "mono" }, JSON.stringify(i.correction)), h("td", {}, i.analyst)))))));
+  }
+  $("review").replaceChildren(...nodes);
+}
+
+function renderOutcome(rows) {
+  $("outcome").replaceChildren(rows.length
+    ? h("table", {}, h("tbody", {}, rows.map(([k, v]) => h("tr", {}, h("td", { style: "width:34%;color:var(--muted)" }, k), h("td", {}, v)))))
+    : h("div", { class: "empty" }, "No results yet."));
+}
+
+/* ---- learned mappings (all runs) */
+async function loadLearn() {
+  const { mappings } = await api("/api/learn");
+  if (!changed("learn", mappings)) return;
+  const msg = h("div", { class: "msg" });
+  const act = async (id, verb) => {
+    try { await api(`/api/learn/${id}/${verb}`, { analyst: analyst() }); await refresh(); } catch (e) { say(msg, e.message, false); }
+  };
+  const short = (v) => { const t = typeof v === "string" ? v : JSON.stringify(v); return t.length > 70 ? t.slice(0, 67) + "…" : t; };
+  $("learn").replaceChildren(
+    h("div", { class: "sub", style: "margin-bottom:8px" },
+      "A correction is reused on later submissions only after a different analyst approves it."),
+    mappings.length ? h("table", {},
+      h("thead", {}, h("tr", {}, ["#", "Kind", "Key", "Value", "Status", "Proposed by", "Approved by", ""].map((t) => h("th", {}, t)))),
+      h("tbody", {}, mappings.map((m) => h("tr", {}, h("td", {}, m.id), h("td", {}, m.kind),
+        h("td", { class: "mono", title: m.key }, short(m.key)), h("td", { class: "mono" }, short(m.value)),
+        h("td", {}, badge(m.status)), h("td", {}, m.proposed_by), h("td", {}, m.approved_by || ""),
+        h("td", {}, m.status === "proposed" ? h("button", { class: "secondary", onclick: () => act(m.id, "approve") }, "Approve")
+          : m.status === "approved" ? h("button", { class: "secondary", onclick: () => act(m.id, "revoke") }, "Revoke") : "")))))
+      : h("div", { class: "empty" }, "No learned mappings yet."), msg);
+}
+
+/* ---- audit log */
+function renderAuditFilter() {
+  const select = $("audit-agent"), current = select.value;
+  const agents = [...new Set(state.audit.map((e) => e.agent))];
+  select.replaceChildren(h("option", { value: "" }, "All agents"), ...agents.map((a) => h("option", { value: a }, a)));
+  select.value = agents.includes(current) ? current : "";
+}
+function renderAudit() {
+  const agent = $("audit-agent").value, text = $("audit-text").value.trim().toLowerCase();
+  const rows = state.audit.filter((e) => (!agent || e.agent === agent) &&
+    (!text || `${e.input_ref} ${e.decision} ${e.rule_or_model}`.toLowerCase().includes(text)));
+  $("audit-count").textContent = `${rows.length} of ${state.audit.length} entries`;
+  $("audit").replaceChildren(...rows.map((e) => h("tr", {}, h("td", { class: "num" }, e.id),
+    h("td", { class: "mono nowrap" }, e.ts.slice(11, 23)), h("td", {}, e.agent), h("td", { class: "mono" }, e.input_ref),
+    h("td", {}, e.decision), h("td", { class: "num" }, e.confidence.toFixed(2)), h("td", { class: "mono" }, e.rule_or_model))));
+}
+
+/* ---- wiring */
+async function refresh() {
+  try { await loadRuns(); await Promise.all([loadRun(), loadLearn()]); } catch (e) { console.error(e); }
+}
+async function demo(profile) {
+  const msg = $("demo-msg");
+  try {
+    say(msg, "Running…", true);
+    const result = await api("/api/demo", { profile });
+    say(msg, `${result.run_id}: ${result.status.replace(/_/g, " ").toLowerCase()}`, true);
+    selectRun(result.run_id);
+  } catch (e) { say(msg, e.message, false); }
+}
+$("demo-clean").addEventListener("click", () => demo("clean"));
+$("demo-messy").addEventListener("click", () => demo("messy"));
+$("audit-agent").addEventListener("change", renderAudit);
+$("audit-text").addEventListener("input", renderAudit);
+$("analyst").value = localStorage.getItem("forty8.analyst") || "";
+$("analyst").addEventListener("input", (e) => localStorage.setItem("forty8.analyst", e.target.value));
+if (location.hash.startsWith("#run_")) state.runId = location.hash.slice(1);
+refresh();
+setInterval(refresh, 4000);
+</script>
+</body>
+</html>

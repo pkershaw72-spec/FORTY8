@@ -11,7 +11,7 @@ See [SPEC.md](SPEC.md). Internal proof of concept: **synthetic data and mock con
 | 2 | Steps 1-5 and the slip lane (85% gate, learning loop) | done |
 | 3 | Steps 6-7: geocoding cascade (80% TIV check), enrichment | done |
 | 4 | Steps 8-11, end-to-end tests, metrics report, OED export | done |
-| 5 | Web page | next |
+| 5 | Web page: run progress, slip lane, review queue, learned mappings, audit log | done |
 
 All 11 steps and the slip lane are implemented against mock connectors.
 
@@ -31,6 +31,7 @@ forty8 audit <run>
 forty8 metrics <run>                # or `forty8 metrics` for a summary across runs
 forty8 report <run>                 # run metrics report (markdown)
 forty8 export <run> --out export    # OED location.csv and account.csv
+forty8 serve                        # web page at http://127.0.0.1:8048
 ```
 
 ## How it fits together
@@ -46,4 +47,6 @@ forty8 export <run> --out export    # OED location.csv and account.csv
 - Learning loop: a correction fixes the current run and is stored as a *proposed* mapping. It is reused
   on later submissions only after a **different** analyst approves it; every reuse is audit-logged.
 - `src/forty8/connectors` has an interface per external system, with mocks. H3 uses the real library.
+- `src/forty8/web` is a FastAPI app and one HTML page over the same services as the CLI: run progress,
+  review queue (correct and resume), learned-mapping approval and the audit log. No authentication.
 - `src/forty8/synth` generates clean and messy submissions; each defect is an independent switch.

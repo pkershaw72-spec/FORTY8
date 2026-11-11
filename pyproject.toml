@@ -15,10 +15,12 @@ dependencies = [
     "pypdf>=4.0",
     "h3>=4.0",
     "scikit-learn>=1.4",
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "httpx>=0.27"]
 
 [project.scripts]
 forty8 = "forty8.cli:main"
@@ -27,7 +29,7 @@ forty8 = "forty8.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-forty8 = ["schema/*.toml"]
+forty8 = ["schema/*.toml", "web/static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

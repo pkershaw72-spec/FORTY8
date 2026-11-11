@@ -20,6 +20,36 @@ def _duration(seconds: float | None) -> str:
     return f"{seconds:.2f}s" if seconds < 120 else f"{seconds / 60:.1f} min"
 
 
+def outcome_rows(orc: Orchestrator, run_id: str) -> list[list]:
+    """Headline results of a run, as [item, result] rows, for whatever steps have produced output."""
+    outcome: list[list] = []
+    if (slip := orc.output(run_id, "contract")) is not None:
+        outcome.append(["Slip confidence (minimum term)", f"{slip.overall_confidence:.0%} (threshold {slip.threshold:.0%})"])
+    if (geo := orc.output(run_id, "geocoding")) is not None:
+        outcome.append(["TIV at street level or better", f"{geo.tiv_street_share:.1%} (threshold {geo.threshold:.0%})"])
+        outcome.append(["Geocoding providers", ", ".join(f"{k}: {v}" for k, v in geo.by_provider.items())])
+    if (enriched := orc.output(run_id, "enrichment")) is not None:
+        outcome.append(["Completeness", f"{enriched.completeness_before:.1%} -> {enriched.completeness_after:.1%}"])
+        outcome.append(["Large year-on-year changes", len(enriched.yoy_flags)])
+    if (gate := orc.output(run_id, "audit_gate")) is not None:
+        outcome.append(["Data quality tests", ", ".join(
+            f"{t.name}: {'pass' if t.passed and not t.waived else 'resolved by analyst' if t.passed else 'FAIL'}"
+            for t in gate.tests)])
+    if (policy := orc.output(run_id, "policy_mapping")) is not None:
+        outcome.append(["Locations in exposure set", len(policy.exposure.locations)])
+    if (model := orc.output(run_id, "model_track")) is not None:
+        r = model.results
+        outcome.append(["Total insured value", f"{model.currency} {model.total_tiv:,.0f}"])
+        outcome.append(["Model job", f"{model.job_id} on {model.model}, {model.attempts} attempt(s)"])
+        outcome.append(["AAL", f"{r.currency} {r.aal:,.0f}"])
+        outcome.append(["OEP 100-year", f"{r.currency} {r.oep_100:,.0f}"])
+        outcome.append(["OEP 250-year", f"{r.currency} {r.oep_250:,.0f}"])
+    if (pricing := orc.output(run_id, "pricing")) is not None:
+        outcome.append(["Pricing tool", f"accepted, reference {pricing.response.reference}" if pricing.response.accepted
+                        else f"rejected: {pricing.response.reason}"])
+    return outcome
+
+
 def render_report(orc: Orchestrator, run_id: str) -> str:
     run, m = orc.store.get_run(run_id), run_metrics(orc.store, run_id)
     target = orc.settings.metrics.target_minutes
@@ -53,31 +83,7 @@ def render_report(orc: Orchestrator, run_id: str) -> str:
         lines += _table(["Exception", "Step", "Raised", "Resolved"], [
             [code, next(i.step for i in items if i.code == code), n, resolved[code]] for code, n in sorted(by_code.items())])
 
-    outcome: list[list] = []
-    if (slip := orc.output(run_id, "contract")) is not None:
-        outcome.append(["Slip confidence (minimum term)", f"{slip.overall_confidence:.0%} (threshold {slip.threshold:.0%})"])
-    if (geo := orc.output(run_id, "geocoding")) is not None:
-        outcome.append(["TIV at street level or better", f"{geo.tiv_street_share:.1%} (threshold {geo.threshold:.0%})"])
-        outcome.append(["Geocoding providers", ", ".join(f"{k}: {v}" for k, v in geo.by_provider.items())])
-    if (enriched := orc.output(run_id, "enrichment")) is not None:
-        outcome.append(["Completeness", f"{enriched.completeness_before:.1%} -> {enriched.completeness_after:.1%}"])
-        outcome.append(["Large year-on-year changes", len(enriched.yoy_flags)])
-    if (gate := orc.output(run_id, "audit_gate")) is not None:
-        outcome.append(["Data quality tests", ", ".join(
-            f"{t.name}: {'pass' if t.passed and not t.waived else 'resolved by analyst' if t.passed else 'FAIL'}"
-            for t in gate.tests)])
-    if (policy := orc.output(run_id, "policy_mapping")) is not None:
-        outcome.append(["Locations in exposure set", len(policy.exposure.locations)])
-    if (model := orc.output(run_id, "model_track")) is not None:
-        r = model.results
-        outcome.append(["Total insured value", f"{model.currency} {model.total_tiv:,.0f}"])
-        outcome.append(["Model job", f"{model.job_id} on {model.model}, {model.attempts} attempt(s)"])
-        outcome.append(["AAL", f"{r.currency} {r.aal:,.0f}"])
-        outcome.append(["OEP 100-year", f"{r.currency} {r.oep_100:,.0f}"])
-        outcome.append(["OEP 250-year", f"{r.currency} {r.oep_250:,.0f}"])
-    if (pricing := orc.output(run_id, "pricing")) is not None:
-        outcome.append(["Pricing tool", f"accepted, reference {pricing.response.reference}" if pricing.response.accepted
-                        else f"rejected: {pricing.response.reason}"])
+    outcome = outcome_rows(orc, run_id)
     if outcome:
         lines += ["", "## Outcome", ""] + _table(["Item", "Result"], outcome)
     return "\n".join(lines) + "\n"
