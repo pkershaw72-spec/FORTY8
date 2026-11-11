@@ -64,7 +64,7 @@ def render_report(orc: Orchestrator, run_id: str) -> str:
         outcome.append(["Large year-on-year changes", len(enriched.yoy_flags)])
     if (gate := orc.output(run_id, "audit_gate")) is not None:
         outcome.append(["Data quality tests", ", ".join(
-            f"{t.name}: {'pass' if t.passed and not t.waived else 'accepted by analyst' if t.passed else 'FAIL'}"
+            f"{t.name}: {'pass' if t.passed and not t.waived else 'resolved by analyst' if t.passed else 'FAIL'}"
             for t in gate.tests)])
     if (policy := orc.output(run_id, "policy_mapping")) is not None:
         outcome.append(["Locations in exposure set", len(policy.exposure.locations)])

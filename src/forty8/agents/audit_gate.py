@@ -67,7 +67,7 @@ class _GateRun:
 
     def _result(self, name: str, failures: int, waived: int, ok: str, bad: str) -> QualityTest:
         open_failures = failures - waived
-        detail = ok if failures == 0 else bad + (f" ({waived} accepted by analyst)" if waived else "")
+        detail = ok if failures == 0 else bad + (f" ({waived} fixed or accepted by analyst)" if waived else "")
         return QualityTest(name=name, passed=open_failures == 0, detail=detail, failures=failures, waived=waived)
 
     def _set(self, loc: Location, field: str, value: Any, analyst: str) -> None:

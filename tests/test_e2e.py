@@ -168,7 +168,7 @@ def test_report_export_and_summary(make_orchestrator, clean_submission, messy_su
     work_queue(orc, messy, messy_submission)
     done = render_report(orc, messy)
     assert "| Straight-through | no |" in done and "| AUDIT_DUPLICATE | audit_gate | 1 | 1 |" in done
-    assert "tiv_reconciles_to_sov: accepted by analyst" in done
+    assert "tiv_reconciles_to_sov: resolved by analyst" in done
 
     summary = summary_across_runs(orc)
     assert (summary["runs"], summary["completed"], summary["straight_through"], summary["straight_through_rate"]) == (2, 2, 1, 0.5)

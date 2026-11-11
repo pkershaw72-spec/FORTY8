@@ -175,7 +175,7 @@ class QualityTest(BaseModel):
     passed: bool
     detail: str
     failures: int = 0
-    waived: int = 0   # failures an analyst accepted
+    waived: int = 0   # failures an analyst fixed or accepted
 
 
 class AuditGateOutput(BaseModel):
