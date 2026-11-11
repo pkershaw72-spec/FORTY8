@@ -6,7 +6,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from forty8.models.exposure import Lineage, Location
+from forty8.models.exposure import ExposureSet, Lineage, Location
+from forty8.models.results import LossResults, PricingResponse, PricingSubmission
 
 
 # ---- step 1: intake
@@ -166,3 +167,40 @@ class EnrichedLocations(BaseModel):
     yoy_flags: list[YoYFlag] = Field(default_factory=list)
     new_locations: list[str] = Field(default_factory=list)
     dropped_locations: list[str] = Field(default_factory=list)
+
+
+# ---- step 8: audit gate
+class QualityTest(BaseModel):
+    name: str
+    passed: bool
+    detail: str
+    failures: int = 0
+    waived: int = 0   # failures an analyst accepted
+
+
+class AuditGateOutput(BaseModel):
+    locations: list[Location] = Field(default_factory=list)
+    tests: list[QualityTest] = Field(default_factory=list)
+
+
+# ---- step 9: policy mapping
+class PolicyMapping(BaseModel):
+    exposure: ExposureSet
+    zone_resolution: dict[str, str] = Field(default_factory=dict)   # slip wording -> zone key
+    locations_by_zone: dict[str, int] = Field(default_factory=dict)
+
+
+# ---- step 10: model and track
+class ModelOutput(BaseModel):
+    job_id: str
+    attempts: int
+    model: str
+    results: LossResults
+    total_tiv: float
+    currency: str
+
+
+# ---- step 11: pricing
+class PricingOutput(BaseModel):
+    submission: PricingSubmission
+    response: PricingResponse

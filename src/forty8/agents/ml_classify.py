@@ -89,4 +89,10 @@ class MLClassifyAgent:
                 priority=sum(loc.tiv for loc in affected),
                 learn=LearnSpec(kind=field, key=text),
             ))
+        audit.append(AuditEntry(
+            input_ref="coding", confidence=1.0, rule_or_model="rule:classification_summary",
+            decision=(f"{len(out.classifications)} of {len(coded.pending)} value(s) classified, "
+                      f"{len(exceptions)} sent to review" if coded.pending
+                      else "nothing to classify: every value was coded by rule in step 4"),
+        ))
         return finish(out, audit, exceptions)

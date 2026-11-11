@@ -10,10 +10,10 @@ See [SPEC.md](SPEC.md). Internal proof of concept: **synthetic data and mock con
 | 1 | Skeleton: orchestrator, audit log, review queue, learning loop, connector interfaces + mocks, synthetic data | done |
 | 2 | Steps 1-5 and the slip lane (85% gate, learning loop) | done |
 | 3 | Steps 6-7: geocoding cascade (80% TIV check), enrichment | done |
-| 4 | Steps 8-11, end-to-end tests, metrics report | next |
-| 5 | Web page | |
+| 4 | Steps 8-11, end-to-end tests, metrics report, OED export | done |
+| 5 | Web page | next |
 
-Until a step's agent is built it is a placeholder that passes straight through.
+All 11 steps and the slip lane are implemented against mock connectors.
 
 ## Quick start
 ```bash
@@ -28,7 +28,9 @@ forty8 review resume <run>
 forty8 learn list                  # corrections waiting for a second analyst
 forty8 learn approve <id> --analyst <other name>
 forty8 audit <run>
-forty8 metrics <run>
+forty8 metrics <run>                # or `forty8 metrics` for a summary across runs
+forty8 report <run>                 # run metrics report (markdown)
+forty8 export <run> --out export    # OED location.csv and account.csv
 ```
 
 ## How it fits together

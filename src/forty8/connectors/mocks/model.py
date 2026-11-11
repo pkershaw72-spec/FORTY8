@@ -48,10 +48,13 @@ class MockCatModel:
 class MockPricingTool:
     def __init__(self, options: dict | None = None):
         self.reject = bool((options or {}).get("reject", False))
+        self.reject_first_n = int((options or {}).get("reject_first_n", 0))
         self.received: list[PricingSubmission] = []
+        self.attempts = 0
 
     def submit(self, submission: PricingSubmission) -> PricingResponse:
-        if self.reject:
+        self.attempts += 1
+        if self.reject or self.attempts <= self.reject_first_n:
             return PricingResponse(accepted=False, reason="mock pricing tool configured to reject")
         if submission.aal <= 0 or submission.oep_250 < submission.oep_100:
             return PricingResponse(accepted=False, reason="loss metrics failed validation (AAL > 0, OEP250 >= OEP100)")

@@ -59,4 +59,9 @@ def answer(item: ReviewItem, submission) -> Any:
         return f"{city.lat}, {city.lon}"
     if item.code == "LARGE_YOY_CHANGE":
         return "confirm"
+    fixed = {"AUDIT_TIV_RECONCILE": "accept", "AUDIT_YEAR_BUILT": 1998, "AUDIT_DUPLICATE": "remove",
+             "AUDIT_CONSTRUCTION_STOREYS": {"NumberOfStoreys": 2}, "UNDEFINED_SUBLIMIT_ZONE": "all",
+             "MODEL_JOB_FAILED": "retry", "PRICING_REJECTED": "retry", "UNREADABLE_FILE": submission.sov_path}
+    if item.code in fixed:
+        return fixed[item.code]
     raise AssertionError(f"no scripted answer for {item.code}")

@@ -209,7 +209,8 @@ def _build_locations(rng: random.Random, n: int, defects: Defects, single_curren
                 address_class="A", occupancy=occupancy, construction=construction,
                 occupancy_text=occ_es if spanish else occ_en, construction_text=con_es if spanish else con_en,
                 occupancy_code=OCCUPANCY_CODES[occupancy], construction_code=CONSTRUCTION_CODES[construction],
-                year_built=rng.randint(1965, 2022), storeys=rng.randint(1, 6),
+                year_built=rng.randint(1965, 2022),
+                storeys=min(rng.randint(1, 6), 3 if construction == "light_metal" else 6),  # keep clean data plausible
                 floor_area_m2=float(rng.randint(8, 400) * 100),
                 building=building, contents=round(building * 0.5, -3), bi=round(building * 0.3, -3),
                 currency=currency,

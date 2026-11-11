@@ -74,6 +74,23 @@ class BuildingAttributes(BaseModel):
     floor_area_m2: float | None = None
 
 
+class Sublimit(BaseModel):
+    peril: str
+    zone: str          # "all" or a zone key such as "us_tier1_wind"
+    limit: float
+    zone_text: str = ""       # the slip's own wording
+    basis: str = "occurrence"
+
+
+class LocationTerms(BaseModel):
+    """Policy terms as they apply to one location."""
+
+    perils: list[str]
+    limit: float
+    deductible: float
+    sublimits: list[Sublimit] = Field(default_factory=list)
+
+
 class Location(BaseModel):
     # OED location fields
     LocNumber: str
@@ -104,17 +121,12 @@ class Location(BaseModel):
     hazard: dict[str, SourcedValue] = Field(default_factory=dict)
     sources: dict[str, SourcedValue] = Field(default_factory=dict)  # field name -> provenance
     zones: list[str] = Field(default_factory=list)
+    terms: LocationTerms | None = None
     extra: dict[str, SourcedValue] = Field(default_factory=dict)   # non-OED attributes, e.g. from surveys
 
     @property
     def tiv(self) -> float:
         return self.BuildingTIV + self.ContentsTIV + self.BITIV
-
-
-class Sublimit(BaseModel):
-    peril: str
-    zone: str          # "all" or a zone key such as "us_tier1_wind"
-    limit: float
 
 
 class Account(BaseModel):

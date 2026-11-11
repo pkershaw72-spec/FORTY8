@@ -120,8 +120,38 @@ def cmd_audit(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_report(args: argparse.Namespace) -> int:
+    from forty8.orchestrator.report import render_report
+
+    text = render_report(_orchestrator(args), args.run)
+    if args.out:
+        with open(args.out, "w", encoding="utf-8") as fh:
+            fh.write(text)
+        print(f"Report written to {args.out}")
+    else:
+        print(text)
+    return 0
+
+
+def cmd_export(args: argparse.Namespace) -> int:
+    from forty8.export import export_oed
+
+    mapping = _orchestrator(args).output(args.run, "policy_mapping")
+    if mapping is None:
+        raise ValueError(f"run {args.run} has not reached policy mapping (step 9) yet")
+    location, account = export_oed(mapping.exposure, args.out)
+    print(f"Exposure set written:\n  {location}\n  {account}")
+    return 0
+
+
 def cmd_metrics(args: argparse.Namespace) -> int:
     orc = _orchestrator(args)
+    if not args.run:
+        from forty8.orchestrator.report import summary_across_runs
+
+        for key, value in summary_across_runs(orc).items():
+            print(f"{key.replace('_', ' ')}: {value}")
+        return 0
     m = run_metrics(orc.store, args.run)
     if args.json:
         print(m.model_dump_json(indent=2))
@@ -193,8 +223,18 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("run")
     p.set_defaults(func=cmd_audit)
 
-    p = sub.add_parser("metrics", help="show a run's metrics")
+    p = sub.add_parser("report", help="run metrics report (markdown)")
     p.add_argument("run")
+    p.add_argument("--out", help="write the report to this file")
+    p.set_defaults(func=cmd_report)
+
+    p = sub.add_parser("export", help="write the model-ready exposure set as OED location and account CSV")
+    p.add_argument("run")
+    p.add_argument("--out", default="export")
+    p.set_defaults(func=cmd_export)
+
+    p = sub.add_parser("metrics", help="show a run's metrics, or a summary across all runs")
+    p.add_argument("run", nargs="?")
     p.add_argument("--json", action="store_true")
     p.set_defaults(func=cmd_metrics)
     return parser

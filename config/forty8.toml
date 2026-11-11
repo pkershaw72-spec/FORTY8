@@ -14,10 +14,22 @@ street_level_or_better = ["rooftop", "street"]
 h3_resolution = 8
 web_max_distance_km = 100.0           # a web-search location must be this close to the stated city
 
+[audit]                               # step 8 data quality tests
+year_built_min = 1700
+year_built_max_offset_years = 1       # latest acceptable year built = current year + this
+tiv_reconcile_tolerance = 0.001       # relative difference allowed between pipeline TIV and SoV totals
+[audit.max_storeys_by_construction]   # OED construction code -> highest plausible number of storeys
+5050 = 6
+5100 = 12
+5201 = 3
+
 [model]
 max_retries = 2
 poll_interval_seconds = 0.0
 timeout_seconds = 30.0
+
+[metrics]
+target_minutes = 48                   # straight-through target the run report compares against
 
 [storage]
 db_path = "var/forty8.db"
@@ -88,7 +100,8 @@ impl = "mock"
 endpoint_env = "PRICING_TOOL_URL"
 api_key_env = "PRICING_TOOL_KEY"
 [connectors.pricing_tool.options]
-reject = false                        # mock only: force a rejection
+reject = false                        # mock only: reject every submission
+reject_first_n = 0                    # mock only: reject the first n submissions, then accept
 
 [connectors.llm]
 impl = "mock"

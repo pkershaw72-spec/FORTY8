@@ -47,7 +47,8 @@ def placeholder_agents() -> dict[str, Agent]:
 
 
 def default_agents() -> dict[str, Agent]:
-    """Real agents where implemented; placeholders elsewhere. Later phases replace the placeholders."""
+    """The real agent for every step."""
+    from forty8.agents.audit_gate import AuditGateAgent
     from forty8.agents.cleaning import CleaningAgent
     from forty8.agents.coding import CodingAgent
     from forty8.agents.contract import ContractAgent
@@ -55,8 +56,12 @@ def default_agents() -> dict[str, Agent]:
     from forty8.agents.geocoding import GeocodingAgent
     from forty8.agents.intake import IntakeAgent
     from forty8.agents.ml_classify import MLClassifyAgent
+    from forty8.agents.model_track import ModelTrackAgent
+    from forty8.agents.policy_mapping import PolicyMappingAgent
+    from forty8.agents.pricing import PricingAgent
     from forty8.agents.schema_mapping import SchemaMappingAgent
 
     real: list[Agent] = [IntakeAgent(), CleaningAgent(), ContractAgent(), SchemaMappingAgent(), CodingAgent(),
-                         MLClassifyAgent(), GeocodingAgent(), EnrichmentAgent()]
+                         MLClassifyAgent(), GeocodingAgent(), EnrichmentAgent(), AuditGateAgent(),
+                         PolicyMappingAgent(), ModelTrackAgent(), PricingAgent()]
     return placeholder_agents() | {agent.key: agent for agent in real}

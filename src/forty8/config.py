@@ -26,10 +26,21 @@ class GeocodingSettings(BaseModel):
     web_max_distance_km: float
 
 
+class AuditSettings(BaseModel):
+    year_built_min: int
+    year_built_max_offset_years: int
+    tiv_reconcile_tolerance: float
+    max_storeys_by_construction: dict[str, int]
+
+
 class ModelSettings(BaseModel):
     max_retries: int
     poll_interval_seconds: float
     timeout_seconds: float
+
+
+class MetricsSettings(BaseModel):
+    target_minutes: float
 
 
 class StorageSettings(BaseModel):
@@ -69,7 +80,9 @@ class FxSettings(BaseModel):
 class Settings(BaseModel):
     thresholds: Thresholds
     geocoding: GeocodingSettings
+    audit: AuditSettings
     model: ModelSettings
+    metrics: MetricsSettings
     storage: StorageSettings
     schema_: SchemaSettings = Field(alias="schema")
     fx: FxSettings
