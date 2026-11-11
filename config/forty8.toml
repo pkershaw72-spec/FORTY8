@@ -1,0 +1,94 @@
+# Forty8 configuration. Every threshold and every connector choice lives here.
+# Secrets are never stored in this file: connectors name the environment
+# variables that hold their endpoint and API key.
+
+[thresholds]
+geocode_min_tiv_street_level = 0.80   # step 6 and step 8: share of TIV at street level or better
+slip_min_confidence = 0.85            # step 2b: overall slip confidence = minimum term confidence
+ml_min_confidence = 0.75              # step 5: below this the value goes to the review queue
+
+[geocoding]
+street_level_or_better = ["rooftop", "street"]
+h3_resolution = 8
+
+[model]
+max_retries = 2
+poll_interval_seconds = 0.0
+timeout_seconds = 30.0
+
+[storage]
+db_path = "var/forty8.db"
+mock_data_dir = "var/mock_data"       # prior-year and survey files written by the synthetic generator
+
+[schema]
+target = "oed"
+
+[fx]
+base = "USD"
+[fx.rates_to_base]                    # static rates for the proof of concept
+USD = 1.0
+EUR = 1.08
+GBP = 1.27
+MXN = 0.055
+JPY = 0.0066
+
+# impl = "mock" everywhere for v1. A real connector is added by registering an
+# implementation under a new impl name and changing the line here.
+[connectors.moodys_geocoder]
+impl = "mock"
+endpoint_env = "MOODYS_GEOCODER_URL"
+api_key_env = "MOODYS_API_KEY"
+
+[connectors.bing_geocoder]
+impl = "mock"
+endpoint_env = "BING_MAPS_URL"
+api_key_env = "BING_MAPS_KEY"
+
+[connectors.web_search]
+impl = "mock"
+api_key_env = "WEB_SEARCH_KEY"
+
+[connectors.building_data]
+impl = "mock"
+endpoint_env = "BUILDING_DATA_URL"
+api_key_env = "BUILDING_DATA_KEY"
+
+[connectors.nathan]
+impl = "mock"
+endpoint_env = "NATHAN_URL"
+api_key_env = "NATHAN_KEY"
+
+[connectors.athenium]
+impl = "mock"
+endpoint_env = "ATHENIUM_URL"
+api_key_env = "ATHENIUM_KEY"
+
+[connectors.h3]
+impl = "h3"                           # the real open-source library
+
+[connectors.survey_store]
+impl = "mock"
+
+[connectors.prior_year_store]
+impl = "mock"
+
+[connectors.cat_model]
+impl = "mock"
+endpoint_env = "MOODYS_MODEL_URL"
+api_key_env = "MOODYS_API_KEY"
+[connectors.cat_model.options]
+fail_first_n_jobs = 0                 # mock only: force job failures to exercise retry
+polls_until_complete = 2
+
+[connectors.pricing_tool]
+impl = "mock"
+endpoint_env = "PRICING_TOOL_URL"
+api_key_env = "PRICING_TOOL_KEY"
+[connectors.pricing_tool.options]
+reject = false                        # mock only: force a rejection
+
+[connectors.llm]
+impl = "mock"
+api_key_env = "ANTHROPIC_API_KEY"
+[connectors.llm.options]
+model = "mock-llm"
