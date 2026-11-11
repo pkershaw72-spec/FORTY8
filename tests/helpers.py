@@ -8,6 +8,7 @@ from forty8.agents.base import AgentContext
 from forty8.connectors.registry import build_connectors
 from forty8.models.common import Correction, LearnedMapping, MappingStatus, ReviewItem, utcnow
 from forty8.models.exposure import Submission
+from forty8.reference.gazetteer import find_city
 
 
 class DictLearning:
@@ -52,4 +53,10 @@ def answer(item: ReviewItem, submission) -> Any:
         if name.startswith("sublimit:"):
             return payload["extracted_value"]["limit"]
         return getattr(slip, name)
+    if item.code == "LOW_TIV_GEOCODE":
+        loc = next(l for l in submission.locations if l.loc_number == payload["locations"][0])
+        city = find_city(loc.city)
+        return f"{city.lat}, {city.lon}"
+    if item.code == "LARGE_YOY_CHANGE":
+        return "confirm"
     raise AssertionError(f"no scripted answer for {item.code}")

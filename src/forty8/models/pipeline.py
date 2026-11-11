@@ -134,3 +134,35 @@ class CodedSlip(BaseModel):
     @property
     def sublimits(self) -> list[SlipTerm]:
         return [t for t in self.terms if t.name.startswith("sublimit:")]
+
+
+# ---- step 6: geocoding
+class GeocodedLocations(BaseModel):
+    locations: list[Location] = Field(default_factory=list)
+    tiv_street_share: float = 0.0     # share of TIV (base currency) at street level or better
+    threshold: float = 0.0
+    total_tiv_base: float = 0.0
+    by_resolution: dict[str, int] = Field(default_factory=dict)
+    by_provider: dict[str, int] = Field(default_factory=dict)
+
+
+# ---- step 7: enrichment
+class YoYFlag(BaseModel):
+    loc_number: str
+    prior_tiv: float
+    current_tiv: float
+    change: float             # +1.5 = up 150%
+    currency: str | None = None
+    resolution: str = "open"  # open | confirmed | reverted to prior
+
+
+class EnrichedLocations(BaseModel):
+    locations: list[Location] = Field(default_factory=list)
+    completeness_before: float = 0.0
+    completeness_after: float = 0.0
+    completeness_tiv_weighted: float = 0.0
+    completeness_by_field: dict[str, float] = Field(default_factory=dict)
+    filled_by_source: dict[str, int] = Field(default_factory=dict)
+    yoy_flags: list[YoYFlag] = Field(default_factory=list)
+    new_locations: list[str] = Field(default_factory=list)
+    dropped_locations: list[str] = Field(default_factory=list)

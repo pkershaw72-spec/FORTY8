@@ -51,10 +51,12 @@ def default_agents() -> dict[str, Agent]:
     from forty8.agents.cleaning import CleaningAgent
     from forty8.agents.coding import CodingAgent
     from forty8.agents.contract import ContractAgent
+    from forty8.agents.enrichment import EnrichmentAgent
+    from forty8.agents.geocoding import GeocodingAgent
     from forty8.agents.intake import IntakeAgent
     from forty8.agents.ml_classify import MLClassifyAgent
     from forty8.agents.schema_mapping import SchemaMappingAgent
 
     real: list[Agent] = [IntakeAgent(), CleaningAgent(), ContractAgent(), SchemaMappingAgent(), CodingAgent(),
-                         MLClassifyAgent()]
+                         MLClassifyAgent(), GeocodingAgent(), EnrichmentAgent()]
     return placeholder_agents() | {agent.key: agent for agent in real}

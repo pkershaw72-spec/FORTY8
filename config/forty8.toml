@@ -7,10 +7,12 @@ geocode_min_tiv_street_level = 0.80   # step 6 and step 8: share of TIV at stree
 slip_min_confidence = 0.85            # step 2b: overall slip confidence = minimum term confidence
 ml_min_confidence = 0.75              # step 5: below this the value goes to the review queue
 header_min_confidence = 0.80          # step 3: minimum confidence to accept an LLM header mapping
+yoy_tiv_change_flag = 0.25            # step 7: flag a location whose TIV moved more than this vs prior year
 
 [geocoding]
 street_level_or_better = ["rooftop", "street"]
 h3_resolution = 8
+web_max_distance_km = 100.0           # a web-search location must be this close to the stated city
 
 [model]
 max_retries = 2

@@ -17,11 +17,13 @@ class Thresholds(BaseModel):
     slip_min_confidence: float = Field(ge=0, le=1)
     ml_min_confidence: float = Field(ge=0, le=1)
     header_min_confidence: float = Field(ge=0, le=1)
+    yoy_tiv_change_flag: float = Field(ge=0)
 
 
 class GeocodingSettings(BaseModel):
     street_level_or_better: list[str]
     h3_resolution: int
+    web_max_distance_km: float
 
 
 class ModelSettings(BaseModel):
@@ -39,11 +41,6 @@ class SchemaSettings(BaseModel):
     target: str
 
 
-class FxSettings(BaseModel):
-    base: str
-    rates_to_base: dict[str, float]
-
-
 class ConnectorConfig(BaseModel):
     impl: str
     endpoint_env: str | None = None
@@ -55,6 +52,18 @@ class ConnectorConfig(BaseModel):
 
     def api_key(self) -> str | None:
         return os.environ.get(self.api_key_env) if self.api_key_env else None
+
+
+class FxSettings(BaseModel):
+    base: str
+    rates_to_base: dict[str, float]
+
+    def to_base(self, amount: float, currency: str | None) -> float:
+        """Convert to the base currency. An unknown or missing currency is treated as base."""
+        return amount * self.rates_to_base.get((currency or self.base).upper(), 1.0)
+
+    def known(self, currency: str | None) -> bool:
+        return currency is not None and currency.upper() in self.rates_to_base
 
 
 class Settings(BaseModel):

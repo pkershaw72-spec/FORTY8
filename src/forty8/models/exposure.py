@@ -104,6 +104,7 @@ class Location(BaseModel):
     hazard: dict[str, SourcedValue] = Field(default_factory=dict)
     sources: dict[str, SourcedValue] = Field(default_factory=dict)  # field name -> provenance
     zones: list[str] = Field(default_factory=list)
+    extra: dict[str, SourcedValue] = Field(default_factory=dict)   # non-OED attributes, e.g. from surveys
 
     @property
     def tiv(self) -> float:

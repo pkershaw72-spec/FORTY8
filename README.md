@@ -9,8 +9,8 @@ See [SPEC.md](SPEC.md). Internal proof of concept: **synthetic data and mock con
 |---|---|---|
 | 1 | Skeleton: orchestrator, audit log, review queue, learning loop, connector interfaces + mocks, synthetic data | done |
 | 2 | Steps 1-5 and the slip lane (85% gate, learning loop) | done |
-| 3 | Steps 6-7: geocoding cascade, enrichment | next |
-| 4 | Steps 8-11, end-to-end tests, metrics report | |
+| 3 | Steps 6-7: geocoding cascade (80% TIV check), enrichment | done |
+| 4 | Steps 8-11, end-to-end tests, metrics report | next |
 | 5 | Web page | |
 
 Until a step's agent is built it is a placeholder that passes straight through.
