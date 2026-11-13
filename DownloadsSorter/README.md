@@ -1,7 +1,7 @@
 # Downloads Sorter
 
-A small Mac app that tidies your Downloads folder. Double-click it, confirm, and
-every loose file is moved into a category subfolder of Downloads: Images, Videos,
+A small Mac app that tidies your Downloads folder. Open it, confirm, and every
+loose file is moved into a category subfolder of Downloads: Images, Videos,
 Audio, PDFs, Documents, Spreadsheets, Presentations, Archives, Installers, eBooks,
 Fonts, Calendar and Contacts, Code and Data, and Other for anything unrecognised.
 
@@ -9,16 +9,16 @@ It is unrelated to the rest of this repository; it just lives here.
 
 ## Install
 
-1. Copy `DownloadsSorter.app` to your Applications folder (or anywhere you like).
-2. The app is not signed, so the first launch needs one extra step. Either
-   right-click the app and choose Open, or run:
+The app is built on your own Mac, so macOS treats it as yours: no malware
+warning, and it can ask properly for access to Downloads.
 
-   ```bash
-   xattr -dr com.apple.quarantine /Applications/DownloadsSorter.app
-   ```
+1. Open Terminal.
+2. Type `bash ` (with a space after it), drag `install.sh` from this folder
+   into the Terminal window, and press Return.
+3. Downloads Sorter opens. Click Allow when macOS asks about your Downloads
+   folder.
 
-3. The first time it runs, macOS asks whether it may access your Downloads
-   folder. Choose Allow.
+After that it is in Applications as "Downloads Sorter".
 
 ## What it does
 
@@ -29,14 +29,11 @@ It is unrelated to the rest of this repository; it just lives here.
 
 ## Changing the categories
 
-The rules are a plain list of file extensions in
-`DownloadsSorter.app/Contents/MacOS/downloads-sorter` (the `category_for`
-function). Edit it in any text editor.
+The rules are a plain list of file extensions in the `category_for` function of
+`downloads-sorter`. Edit it in any text editor and run `install.sh` again.
 
-## From Terminal
+## Files
 
-```bash
-/Applications/DownloadsSorter.app/Contents/MacOS/downloads-sorter --yes
-```
-
-sorts without dialogs; `--undo` reverses the last sort.
+- `DownloadsSorter.applescript`: the app (the dialogs).
+- `downloads-sorter`: the shell script that plans, sorts and undoes.
+- `install.sh`: builds the app with `osacompile` and installs both.
