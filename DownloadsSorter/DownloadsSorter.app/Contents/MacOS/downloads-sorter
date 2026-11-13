@@ -1,0 +1,184 @@
+#!/bin/bash
+# Downloads Sorter: moves loose files in ~/Downloads into category subfolders.
+# Written for the bash 3.2 that ships with macOS.
+#
+#   (no arguments)   ask before sorting, with dialogs
+#   --yes            sort without dialogs, print the summary
+#   --undo           put the files from the last sort back, without dialogs
+#
+# DOWNLOADS_SORTER_DIR overrides the folder to sort (default: ~/Downloads).
+
+set -u
+
+DIR="${DOWNLOADS_SORTER_DIR:-$HOME/Downloads}"
+STATE_DIR="${DOWNLOADS_SORTER_STATE:-$HOME/Library/Application Support/DownloadsSorter}"
+LAST_RUN="$STATE_DIR/last-run.tsv"
+TITLE="Downloads Sorter"
+TAB=$'\t'
+
+MODE="ask"
+case "${1:-}" in
+  --yes) MODE="yes" ;;
+  --undo) MODE="undo" ;;
+esac
+
+category_for() {
+  local name="$1" ext
+  case "$name" in
+    *.*) ext=$(printf '%s' "${name##*.}" | tr '[:upper:]' '[:lower:]') ;;
+    *) echo "Other"; return ;;
+  esac
+  case "$ext" in
+    jpg|jpeg|png|gif|heic|heif|webp|tiff|tif|bmp|svg|raw|cr2|nef|dng|psd|ai|ico|icns) echo "Images" ;;
+    mp4|mov|m4v|avi|mkv|wmv|webm|flv|mpg|mpeg) echo "Videos" ;;
+    mp3|m4a|wav|aac|flac|aiff|aif|ogg|wma|m4b) echo "Audio" ;;
+    pdf) echo "PDFs" ;;
+    doc|docx|dot|dotx|pages|rtf|txt|md|odt|tex|msg|eml) echo "Documents" ;;
+    xls|xlsx|xlsm|xlsb|xltx|csv|tsv|numbers|ods) echo "Spreadsheets" ;;
+    ppt|pptx|pptm|potx|key|odp) echo "Presentations" ;;
+    zip|tar|gz|tgz|bz2|xz|7z|rar|zst) echo "Archives" ;;
+    dmg|pkg|mpkg|iso|exe|msi) echo "Installers" ;;
+    epub|mobi|azw|azw3) echo "eBooks" ;;
+    ttf|otf|woff|woff2) echo "Fonts" ;;
+    ics|vcf) echo "Calendar and Contacts" ;;
+    py|ipynb|r|rmd|sql|js|ts|html|htm|css|json|xml|yaml|yml|sh|swift|java|c|cpp|h|go|rs|rb|php|parquet|sqlite|db) echo "Code and Data" ;;
+    *) echo "Other" ;;
+  esac
+}
+
+# Files a browser is still writing.
+in_progress() {
+  case "$1" in
+    *.crdownload|*.download|*.part|*.partial|*.opdownload) return 0 ;;
+  esac
+  return 1
+}
+
+# A path that does not exist yet: "name.ext", then "name (1).ext", ...
+unique_path() {
+  local folder="$1" name="$2" base ext n=1 candidate
+  candidate="$folder/$name"
+  case "$name" in
+    *.*) base="${name%.*}"; ext=".${name##*.}" ;;
+    *) base="$name"; ext="" ;;
+  esac
+  while [ -e "$candidate" ] || [ -L "$candidate" ]; do
+    candidate="$folder/$base ($n)$ext"
+    n=$((n + 1))
+  done
+  printf '%s' "$candidate"
+}
+
+# dialog MESSAGE BUTTON... : shows a dialog, prints the button pressed.
+# The last button is the default; a button named "Cancel" prints nothing.
+dialog() {
+  local message="$1"; shift
+  local buttons="" b
+  for b in "$@"; do buttons="$buttons\"$b\", "; done
+  buttons="{${buttons%, }}"
+  eval "local default=\"\${$#}\""
+  osascript \
+    -e 'on run argv' \
+    -e 'try' -e 'activate' -e 'end try' \
+    -e "display dialog (item 1 of argv) with title \"$TITLE\" buttons $buttons default button \"$default\"" \
+    -e 'button returned of result' \
+    -e 'end run' "$message" 2>/dev/null
+}
+
+say() {
+  if [ "$MODE" = "ask" ]; then dialog "$1" "OK" >/dev/null; else printf '%s\n' "$1"; fi
+}
+
+undo_last() {
+  if [ ! -s "$LAST_RUN" ]; then say "There is no previous sort to undo."; return; fi
+  local restored=0 skipped=0 dest src
+  while IFS="$TAB" read -r dest src; do
+    if [ -f "$dest" ] && [ ! -e "$src" ] && mv -n "$dest" "$src" 2>/dev/null; then
+      restored=$((restored + 1))
+      rmdir "${dest%/*}" 2>/dev/null      # drop the category folder once it is empty
+    else
+      skipped=$((skipped + 1))
+    fi
+  done < "$LAST_RUN"
+  rm -f "$LAST_RUN"
+  local msg="Put $restored file(s) back in Downloads."
+  [ "$skipped" -gt 0 ] && msg="$msg $skipped could not be restored (moved, renamed or replaced since)."
+  say "$msg"
+}
+
+if [ ! -d "$DIR" ]; then say "Cannot find the folder $DIR."; exit 1; fi
+if ! ls "$DIR" >/dev/null 2>&1; then
+  say "Downloads Sorter is not allowed to read $DIR. Allow it under System Settings > Privacy & Security > Files and Folders, then try again."
+  exit 1
+fi
+mkdir -p "$STATE_DIR"
+
+if [ "$MODE" = "undo" ]; then undo_last; exit 0; fi
+
+# Build the plan: one "Category<TAB>filename" line per loose file.
+PLAN=$(mktemp "${TMPDIR:-/tmp}/downloads-sorter.XXXXXX")
+trap 'rm -f "$PLAN"' EXIT
+for path in "$DIR"/*; do
+  name="${path##*/}"
+  [ -f "$path" ] && [ ! -L "$path" ] || continue      # leave folders, apps and links alone
+  in_progress "$name" && continue
+  case "$name" in *"$TAB"*|*$'\n'*) continue ;; esac
+  printf '%s\t%s\n' "$(category_for "$name")" "$name" >> "$PLAN"
+done
+
+TOTAL=$(wc -l < "$PLAN" | tr -d ' ')
+SUMMARY=$(cut -f1 "$PLAN" | sort | uniq -c | sort -rn | sed -E 's/^ *([0-9]+) (.*)$/  \2: \1/')
+
+if [ "$MODE" = "ask" ]; then
+  if [ "$TOTAL" -eq 0 ]; then
+    if [ -s "$LAST_RUN" ]; then
+      choice=$(dialog "Nothing to sort. Your Downloads folder has no loose files." "Undo Last Sort" "OK")
+      [ "$choice" = "Undo Last Sort" ] && undo_last
+    else
+      say "Nothing to sort. Your Downloads folder has no loose files."
+    fi
+    exit 0
+  fi
+  question="Found $TOTAL file(s) to sort into subfolders of Downloads:
+
+$SUMMARY
+
+Folders and downloads still in progress are left alone."
+  if [ -s "$LAST_RUN" ]; then
+    choice=$(dialog "$question" "Cancel" "Undo Last Sort" "Sort")
+  else
+    choice=$(dialog "$question" "Cancel" "Sort")
+  fi
+  case "$choice" in
+    "Sort") ;;
+    "Undo Last Sort") undo_last; exit 0 ;;
+    *) exit 0 ;;
+  esac
+elif [ "$TOTAL" -eq 0 ]; then
+  echo "Nothing to sort."; exit 0
+fi
+
+# Move the files, recording each move so it can be undone.
+: > "$LAST_RUN"
+moved=0; failed=0
+while IFS="$TAB" read -r category name; do
+  src="$DIR/$name"
+  [ -f "$src" ] || continue
+  if mkdir -p "$DIR/$category" && dest=$(unique_path "$DIR/$category" "$name") && mv -n "$src" "$dest" 2>/dev/null && [ ! -e "$src" ]; then
+    printf '%s\t%s\n' "$dest" "$src" >> "$LAST_RUN"
+    moved=$((moved + 1))
+  else
+    failed=$((failed + 1))
+  fi
+done < "$PLAN"
+
+result="Sorted $moved file(s)."
+[ "$failed" -gt 0 ] && result="$result $failed could not be moved and were left in place."
+
+if [ "$MODE" = "ask" ]; then
+  choice=$(dialog "$result" "OK" "Show Downloads")
+  [ "$choice" = "Show Downloads" ] && open "$DIR"
+else
+  printf '%s\n%s\n' "$result" "$SUMMARY"
+fi
+[ "$failed" -eq 0 ]

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>Downloads Sorter</string>
+	<key>CFBundleDisplayName</key>
+	<string>Downloads Sorter</string>
+	<key>CFBundleIdentifier</key>
+	<string>local.downloads-sorter</string>
+	<key>CFBundleExecutable</key>
+	<string>downloads-sorter</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.15</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Downloads Sorter moves the files in your Downloads folder into category subfolders.</string>
+</dict>
+</plist>
